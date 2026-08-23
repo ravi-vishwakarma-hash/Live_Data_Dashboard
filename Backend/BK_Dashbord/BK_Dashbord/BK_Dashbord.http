@@ -1,0 +1,6 @@
+@BK_Dashbord_HostAddress = http://localhost:5065
+
+GET {{BK_Dashbord_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
