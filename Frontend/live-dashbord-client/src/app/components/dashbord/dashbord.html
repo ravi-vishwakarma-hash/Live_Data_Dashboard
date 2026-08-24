@@ -1,0 +1,43 @@
+<div
+  class="connection-banner"
+  *ngIf="connectionState !== 'connected'"
+  [ngClass]="connectionState"
+>
+  <span *ngIf="connectionState === 'reconnecting'">
+    Reconnecting to live data...
+  </span>
+
+  <span *ngIf="connectionState === 'disconnected'">
+    Disconnected. Attempting to reconnect...
+  </span>
+</div>
+
+<div class="dashboard">
+  <h1>Live Data Dashboard</h1>
+
+  <div class="metric-grid">
+    @for (metric of metrics(); track metric.metricName) {
+      <app-metric-card
+        [name]="metric.metricName"
+        [value]="metric.value"
+        [timestamp]="metric.timestamp">
+      </app-metric-card>
+    }
+    @empty {
+      <p>No metrics available.</p>
+    }
+  </div>
+
+  <div class="chart-grid">
+    @for (metric of metrics(); track metric.metricName) {
+      <app-live-chart
+        [label]="metric.metricName"
+        [value]="metric.value"
+        [timestamp]="metric.timestamp">
+      </app-live-chart>
+    }
+    @empty {
+      <p>No charts available.</p>
+    }
+  </div>
+</div>
