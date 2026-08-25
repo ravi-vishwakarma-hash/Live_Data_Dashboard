@@ -332,6 +332,9 @@ http://localhost:4200
 
 The backend CORS policy is configured to allow this development origin.
 
+<img width="1896" height="987" alt="image" src="https://github.com/user-attachments/assets/a69fbdda-742e-49b9-8ea2-c1cb3e1e327a" />
+
+
 ---
 
 # 📖 API Documentation
