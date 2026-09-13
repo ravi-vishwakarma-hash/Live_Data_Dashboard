@@ -5,5 +5,10 @@
     {{ trendPercent > 0 ? '+' : '' }}{{ trendPercent | number:'1.0-1' }}% since last update
   </p>
   <p class="threshold" *ngIf="status !== 'normal'">{{ status }} threshold reached</p>
+  <div class="statistics" *ngIf="average !== null">
+    <span>Min {{ minimum | number:'1.0-2' }}</span>
+    <span>Avg {{ average | number:'1.0-2' }}</span>
+    <span>Max {{ maximum | number:'1.0-2' }}</span>
+  </div>
   <small>Updated: {{ timestamp | date:'mediumTime' }}</small>
 </div>

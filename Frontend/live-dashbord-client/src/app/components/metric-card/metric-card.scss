@@ -42,6 +42,14 @@
     text-transform: capitalize;
   }
 
+  .statistics {
+    color: #94a3b8;
+    display: flex;
+    font-size: 0.7rem;
+    gap: 0.55rem;
+    margin: 0.55rem 0;
+  }
+
   &.warning {
     border-left-color: #fbbf24;
   }

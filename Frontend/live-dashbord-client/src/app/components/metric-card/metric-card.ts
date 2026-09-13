@@ -14,6 +14,9 @@ export class MetricCard {
   @Input() timestamp = '';
   @Input() unit = '';
   @Input() previousValue: number | null = null;
+  @Input() minimum: number | null = null;
+  @Input() maximum: number | null = null;
+  @Input() average: number | null = null;
   @Input() warningThreshold?: number;
   @Input() criticalThreshold?: number;
 
