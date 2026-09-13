@@ -14,7 +14,10 @@ import { SignalrService } from '../../services/signalr';
   styleUrls: ['./dashbord.scss']
 })
 export class Dashboard implements OnInit, OnDestroy {
+  private readonly historyStorageKey = 'live-dashboard-metric-history';
+  private readonly maxStoredPoints = 120;
   metrics = signal<MetricData[]>([]);
+  metricHistory = signal<Record<string, number[]>>({});
   searchTerm = signal('');
   sortBy = signal<'name' | 'value' | 'updated'>('name');
   historyPoints = signal(30);
@@ -42,18 +45,25 @@ export class Dashboard implements OnInit, OnDestroy {
     });
   });
 
+  activeAlerts = computed(() => this.metrics().filter(metric =>
+    (metric.criticalThreshold !== undefined && metric.value >= metric.criticalThreshold) ||
+    (metric.warningThreshold !== undefined && metric.value >= metric.warningThreshold)
+  ));
+
   constructor(
     private metricsService: MetricsService,
     private signalrService: SignalrService
   ) {}
 
   ngOnInit(): void {
+    this.loadHistory();
     this.signalrService.startConnection();
     this.metricsService.loadInitialSnapshot();
 
     this.metricsService.metrics$
     .subscribe(data => {
       data.forEach(metric => {
+        this.appendHistory(metric);
         const previousValue = this.lastValues.get(metric.metricName);
         if (previousValue !== undefined && previousValue !== metric.value) {
           this.previousValues.set(metric.metricName, previousValue);
@@ -96,5 +106,68 @@ export class Dashboard implements OnInit, OnDestroy {
 
   updateHistory(event: Event): void {
     this.historyPoints.set(Number((event.target as HTMLSelectElement).value));
+  }
+
+  getHistory(metricName: string): number[] {
+    return this.metricHistory()[metricName] ?? [];
+  }
+
+  getAverage(metricName: string): number | null {
+    const values = this.getHistory(metricName);
+    return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
+  }
+
+  getMinimum(metricName: string): number | null {
+    const values = this.getHistory(metricName);
+    return values.length ? Math.min(...values) : null;
+  }
+
+  getMaximum(metricName: string): number | null {
+    const values = this.getHistory(metricName);
+    return values.length ? Math.max(...values) : null;
+  }
+
+  exportCsv(): void {
+    const rows = this.filteredMetrics().map(metric => [
+      metric.metricName,
+      metric.value.toString(),
+      metric.unit ?? '',
+      metric.timestamp,
+      this.getMinimum(metric.metricName)?.toString() ?? '',
+      this.getMaximum(metric.metricName)?.toString() ?? '',
+      this.getAverage(metric.metricName)?.toFixed(2) ?? ''
+    ]);
+    const csv = [
+      ['Metric', 'Value', 'Unit', 'Updated', 'Minimum', 'Maximum', 'Average'],
+      ...rows
+    ].map(row => row.map(value => `"${value.replaceAll('"', '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `metrics-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  private appendHistory(metric: MetricData): void {
+    const history = { ...this.metricHistory() };
+    history[metric.metricName] = [
+      ...(history[metric.metricName] ?? []),
+      metric.value
+    ].slice(-this.maxStoredPoints);
+    this.metricHistory.set(history);
+    localStorage.setItem(this.historyStorageKey, JSON.stringify(history));
+  }
+
+  private loadHistory(): void {
+    try {
+      const savedHistory = localStorage.getItem(this.historyStorageKey);
+      if (savedHistory) {
+        this.metricHistory.set(JSON.parse(savedHistory) as Record<string, number[]>);
+      }
+    } catch {
+      localStorage.removeItem(this.historyStorageKey);
+    }
   }
 }

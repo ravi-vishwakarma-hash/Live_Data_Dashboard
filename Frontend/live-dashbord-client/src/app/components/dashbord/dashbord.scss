@@ -76,6 +76,66 @@
     min-height: 2.25rem;
     padding: 0 0.65rem;
   }
+
+  .export-button {
+    align-self: end;
+    white-space: nowrap;
+  }
+}
+
+.alert-panel {
+  background: #241d25;
+  border: 1px solid #713f46;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  padding: 1rem;
+}
+
+.section-heading {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+
+  h2 {
+    font-size: 1.1rem;
+    margin: 0;
+  }
+
+  > span {
+    color: #fda4af;
+    font-size: 0.8rem;
+  }
+}
+
+.section-heading .eyebrow {
+  margin-bottom: 0.2rem;
+}
+
+.alert-list {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.alert-item {
+  border-left: 3px solid #fbbf24;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+
+  span {
+    color: #fcd34d;
+    font-size: 0.85rem;
+  }
+
+  &.critical {
+    border-left-color: #fb7185;
+
+    span {
+      color: #fda4af;
+    }
+  }
 }
 
 .status-message {
@@ -109,5 +169,10 @@ button {
   .toolbar {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .alert-item {
+    flex-direction: column;
+    gap: 0.25rem;
   }
 }
