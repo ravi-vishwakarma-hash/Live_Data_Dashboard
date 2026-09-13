@@ -14,8 +14,8 @@ export class LiveChartComponent implements OnChanges {
   @Input() label = '';
   @Input() value = 0;
   @Input() timestamp = '';
+  @Input() maxPoints = 30;
 
-  private readonly maxPoints = 30;
 
   public lineChartData: ChartData<'line'> = {
     labels: [],
@@ -45,11 +45,32 @@ export class LiveChartComponent implements OnChanges {
   };
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['value'] && !changes['value'].firstChange) {
-      this.addDataPoint();
-    } else if (changes['value'] && changes['value'].firstChange) {
+    if (changes['label']) {
+      this.lineChartData = {
+        ...this.lineChartData,
+        datasets: [{ ...this.lineChartData.datasets[0], label: this.label }]
+      };
+    }
+
+    if (changes['maxPoints']) {
+      this.trimHistory();
+    }
+
+    if (changes['value']) {
       this.addDataPoint();
     }
+  }
+
+  private trimHistory(): void {
+    const labels = this.lineChartData.labels as string[];
+    const dataset = this.lineChartData.datasets[0].data as number[];
+    const startIndex = Math.max(0, labels.length - this.maxPoints);
+
+    this.lineChartData = {
+      ...this.lineChartData,
+      labels: labels.slice(startIndex),
+      datasets: [{ ...this.lineChartData.datasets[0], data: dataset.slice(startIndex) }]
+    };
   }
 
   private addDataPoint(): void {

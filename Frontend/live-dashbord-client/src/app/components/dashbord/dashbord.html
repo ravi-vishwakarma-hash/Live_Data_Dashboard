@@ -10,30 +10,73 @@
   <span *ngIf="connectionState === 'disconnected'">
     Disconnected. Attempting to reconnect...
   </span>
+  <button type="button" (click)="retry()">Retry connection</button>
 </div>
 
 <div class="dashboard">
-  <h1>Live Data Dashboard</h1>
+  <header class="dashboard-header">
+    <div>
+      <p class="eyebrow">Operations monitor</p>
+      <h1>Live Data Dashboard</h1>
+    </div>
+    <span class="connection-state" [class.online]="connectionState === 'connected'">
+      {{ connectionState }}
+    </span>
+  </header>
+
+  <section class="toolbar" aria-label="Dashboard controls">
+    <label>
+      Search metrics
+      <input type="search" placeholder="Search by name" (input)="updateSearch($event)">
+    </label>
+    <label>
+      Sort by
+      <select (change)="updateSort($event)">
+        <option value="name">Name</option>
+        <option value="value">Value</option>
+        <option value="updated">Latest update</option>
+      </select>
+    </label>
+    <label>
+      Chart history
+      <select (change)="updateHistory($event)">
+        <option value="10">Last 10 updates</option>
+        <option value="30" selected>Last 30 updates</option>
+        <option value="60">Last 60 updates</option>
+        <option value="120">Last 120 updates</option>
+      </select>
+    </label>
+  </section>
+
+  <p class="status-message" *ngIf="isLoading">Loading the latest metrics...</p>
+  <p class="status-message error" *ngIf="errorMessage">
+    {{ errorMessage }} <button type="button" (click)="retry()">Try again</button>
+  </p>
 
   <div class="metric-grid">
-    @for (metric of metrics(); track metric.metricName) {
+    @for (metric of filteredMetrics(); track metric.metricName) {
       <app-metric-card
         [name]="metric.metricName"
         [value]="metric.value"
-        [timestamp]="metric.timestamp">
+        [timestamp]="metric.timestamp"
+        [unit]="metric.unit ?? ''"
+        [previousValue]="getPreviousValue(metric.metricName)"
+        [warningThreshold]="metric.warningThreshold"
+        [criticalThreshold]="metric.criticalThreshold">
       </app-metric-card>
     }
     @empty {
-      <p>No metrics available.</p>
+      <p class="empty-state">No metrics match the current filter.</p>
     }
   </div>
 
   <div class="chart-grid">
-    @for (metric of metrics(); track metric.metricName) {
+    @for (metric of filteredMetrics(); track metric.metricName) {
       <app-live-chart
         [label]="metric.metricName"
         [value]="metric.value"
-        [timestamp]="metric.timestamp">
+        [timestamp]="metric.timestamp"
+        [maxPoints]="historyPoints()">
       </app-live-chart>
     }
     @empty {

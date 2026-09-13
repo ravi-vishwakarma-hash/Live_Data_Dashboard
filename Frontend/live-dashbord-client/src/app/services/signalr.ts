@@ -16,6 +16,10 @@ export class SignalrService {
   public metric$ = this.metricSubject.asObservable();
 
   public startConnection(): void {
+    if (this.hubConnection && this.hubConnection.state !== signalR.HubConnectionState.Disconnected) {
+      return;
+    }
+
     this.hubConnection = new signalR.HubConnectionBuilder()
       .withUrl(`${environment.apiBaseUrl}/hubs/dashboard`)
       .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
@@ -28,8 +32,14 @@ export class SignalrService {
 
     this.hubConnection
       .start()
-      .then(() => console.log('SignalR connection started'))
-      .catch(err => console.error('Error starting SignalR connection:', err));
+      .then(() => {
+        this.connectionState$.next('connected');
+        console.log('SignalR connection started');
+      })
+      .catch(err => {
+        this.connectionState$.next('disconnected');
+        console.error('Error starting SignalR connection:', err);
+      });
 
     this.registerHandlers();
   }
@@ -46,5 +56,10 @@ export class SignalrService {
 
   public stopConnection(): void {
     this.hubConnection?.stop();
+  }
+
+  public reconnect(): void {
+    this.stopConnection();
+    this.startConnection();
   }
 }
