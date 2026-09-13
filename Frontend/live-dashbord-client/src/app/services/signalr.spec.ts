@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { Signalr } from './signalr';
+import { SignalrService } from './signalr';
 
-describe('Signalr', () => {
-  let service: Signalr;
+describe('SignalrService', () => {
+  let service: SignalrService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(Signalr);
+    service = TestBed.inject(SignalrService);
   });
 
   it('should be created', () => {

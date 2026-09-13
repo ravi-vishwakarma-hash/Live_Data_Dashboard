@@ -1,17 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { LiveChart } from './live-chart';
+import { LiveChartComponent } from './live-chart';
 
-describe('LiveChart', () => {
-  let component: LiveChart;
-  let fixture: ComponentFixture<LiveChart>;
+describe('LiveChartComponent', () => {
+  let component: LiveChartComponent;
+  let fixture: ComponentFixture<LiveChartComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [LiveChart],
+      imports: [LiveChartComponent],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(LiveChart);
+    fixture = TestBed.createComponent(LiveChartComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

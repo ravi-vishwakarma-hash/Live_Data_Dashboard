@@ -1,5 +1,9 @@
-<div class="metric-card">
+<div class="metric-card" [class.warning]="status === 'warning'" [class.critical]="status === 'critical'">
   <h3>{{ name }}</h3>
-  <p class="value">{{ value }}</p>
+  <p class="value">{{ value }}<span *ngIf="unit"> {{ unit }}</span></p>
+  <p class="trend" *ngIf="trendPercent !== null" [class.down]="trendPercent < 0">
+    {{ trendPercent > 0 ? '+' : '' }}{{ trendPercent | number:'1.0-1' }}% since last update
+  </p>
+  <p class="threshold" *ngIf="status !== 'normal'">{{ status }} threshold reached</p>
   <small>Updated: {{ timestamp | date:'mediumTime' }}</small>
 </div>

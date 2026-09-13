@@ -4,6 +4,7 @@
   padding: 1.25rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
   transition: transform 0.2s ease;
+  border-left: 4px solid #3f8cff;
 
   &:hover {
     transform: translateY(-2px);
@@ -22,6 +23,31 @@
     font-weight: 700;
     color: #3f8cff;
     margin: 0;
+  }
+
+  .trend {
+    color: #5eead4;
+    font-size: 0.8rem;
+    margin: 0.35rem 0;
+
+    &.down {
+      color: #fda4af;
+    }
+  }
+
+  .threshold {
+    color: #fbbf24;
+    font-size: 0.8rem;
+    margin: 0.35rem 0;
+    text-transform: capitalize;
+  }
+
+  &.warning {
+    border-left-color: #fbbf24;
+  }
+
+  &.critical {
+    border-left-color: #fb7185;
   }
 
   small {
