@@ -1,67 +1,40 @@
-<div
-  class="connection-banner"
-  *ngIf="connectionState !== 'connected'"
-  [ngClass]="connectionState"
->
-  <span *ngIf="connectionState === 'reconnecting'">
-    Reconnecting to live data...
-  </span>
-
-  <span *ngIf="connectionState === 'disconnected'">
-    Disconnected. Attempting to reconnect...
-  </span>
+<div class="connection-banner" *ngIf="connectionState !== 'connected'" [ngClass]="connectionState">
+  <span *ngIf="connectionState === 'reconnecting'">Reconnecting to live data...</span>
+  <span *ngIf="connectionState === 'disconnected'">Disconnected. Attempting to reconnect...</span>
   <button type="button" (click)="retry()">Retry connection</button>
 </div>
 
-<div class="dashboard">
+<div class="dashboard" [class.light-theme]="theme() === 'light'">
   <header class="dashboard-header">
-    <div>
-      <p class="eyebrow">Operations monitor</p>
-      <h1>Live Data Dashboard</h1>
+    <div><p class="eyebrow">Operations monitor</p><h1>Live Data Dashboard</h1></div>
+    <div class="header-actions">
+      <button type="button" (click)="toggleTheme()">{{ theme() === 'dark' ? 'Light theme' : 'Dark theme' }}</button>
+      <button type="button" (click)="toggleCustomization()">{{ isCustomizing() ? 'Done editing' : 'Customize' }}</button>
+      <span class="connection-state" [class.online]="connectionState === 'connected'">{{ connectionState }}</span>
     </div>
-    <span class="connection-state" [class.online]="connectionState === 'connected'">
-      {{ connectionState }}
-    </span>
   </header>
 
   <section class="toolbar" aria-label="Dashboard controls">
-    <label>
-      Search metrics
-      <input type="search" placeholder="Search by name" (input)="updateSearch($event)">
-    </label>
-    <label>
-      Sort by
-      <select (change)="updateSort($event)">
-        <option value="name">Name</option>
-        <option value="value">Value</option>
-        <option value="updated">Latest update</option>
-      </select>
-    </label>
-    <label>
-      Chart history
-      <select (change)="updateHistory($event)">
-        <option value="10">Last 10 updates</option>
-        <option value="30" selected>Last 30 updates</option>
-        <option value="60">Last 60 updates</option>
-        <option value="120">Last 120 updates</option>
-      </select>
-    </label>
+    <label>Search metrics<input type="search" placeholder="Search by name" (input)="updateSearch($event)"></label>
+    <label>Sort by<select (change)="updateSort($event)"><option value="name">Name</option><option value="value">Value</option><option value="updated">Latest update</option></select></label>
+    <label>Chart history<select (change)="updateHistory($event)"><option value="10">Last 10 updates</option><option value="30" selected>Last 30 updates</option><option value="60">Last 60 updates</option><option value="120">Last 120 updates</option></select></label>
     <button type="button" class="export-button" (click)="exportCsv()">Export CSV</button>
   </section>
 
+  <section class="customization-panel" *ngIf="isCustomizing()">
+    <strong>Visible metrics</strong>
+    <div class="metric-toggles">
+      @for (metric of metrics(); track metric.metricName) {
+        <label><input type="checkbox" [checked]="!hiddenMetrics().includes(metric.metricName)" (change)="toggleMetricVisibility(metric.metricName)"> {{ metric.metricName }}</label>
+      }
+    </div>
+  </section>
+
   <p class="status-message" *ngIf="isLoading">Loading the latest metrics...</p>
-  <p class="status-message error" *ngIf="errorMessage">
-    {{ errorMessage }} <button type="button" (click)="retry()">Try again</button>
-  </p>
+  <p class="status-message error" *ngIf="errorMessage">{{ errorMessage }} <button type="button" (click)="retry()">Try again</button></p>
 
   <section class="alert-panel" *ngIf="activeAlerts().length" aria-live="polite">
-    <div class="section-heading">
-      <div>
-        <p class="eyebrow">Attention required</p>
-        <h2>Active alerts</h2>
-      </div>
-      <span>{{ activeAlerts().length }} active</span>
-    </div>
+    <div class="section-heading"><div><p class="eyebrow">Attention required</p><h2>Active alerts</h2></div><span>{{ activeAlerts().length }} active</span></div>
     <div class="alert-list">
       @for (metric of activeAlerts(); track metric.metricName) {
         <div class="alert-item" [class.critical]="metric.criticalThreshold !== undefined && metric.value >= metric.criticalThreshold">
@@ -74,35 +47,34 @@
 
   <div class="metric-grid">
     @for (metric of filteredMetrics(); track metric.metricName) {
-      <app-metric-card
-        [name]="metric.metricName"
-        [value]="metric.value"
-        [timestamp]="metric.timestamp"
-        [unit]="metric.unit ?? ''"
-        [previousValue]="getPreviousValue(metric.metricName)"
-        [minimum]="getMinimum(metric.metricName)"
-        [maximum]="getMaximum(metric.metricName)"
-        [average]="getAverage(metric.metricName)"
-        [warningThreshold]="metric.warningThreshold"
-        [criticalThreshold]="metric.criticalThreshold">
-      </app-metric-card>
+      <app-metric-card [name]="metric.metricName" [value]="metric.value" [timestamp]="metric.timestamp" [unit]="metric.unit ?? ''" [previousValue]="getPreviousValue(metric.metricName)" [minimum]="getMinimum(metric.metricName)" [maximum]="getMaximum(metric.metricName)" [average]="getAverage(metric.metricName)" [warningThreshold]="metric.warningThreshold" [criticalThreshold]="metric.criticalThreshold" (click)="openDetails(metric)"></app-metric-card>
     }
-    @empty {
-      <p class="empty-state">No metrics match the current filter.</p>
-    }
+    @empty { <p class="empty-state">No metrics match the current filter.</p> }
   </div>
+
+  <section class="alert-history" *ngIf="alertHistory().length">
+    <div class="section-heading"><div><p class="eyebrow">Recent events</p><h2>Alert history</h2></div><button type="button" (click)="requestNotifications()">Enable notifications</button></div>
+    <div class="alert-history-list">
+      @for (alert of alertHistory().slice(0, 5); track alert.timestamp + alert.metricName) {
+        <div class="history-item" [class.critical]="alert.severity === 'critical'"><strong>{{ alert.metricName }}</strong><span>{{ alert.severity }} at {{ alert.value }} · {{ alert.timestamp | date:'mediumTime' }}</span></div>
+      }
+    </div>
+  </section>
 
   <div class="chart-grid">
     @for (metric of filteredMetrics(); track metric.metricName) {
-      <app-live-chart
-        [label]="metric.metricName"
-        [value]="metric.value"
-        [timestamp]="metric.timestamp"
-        [maxPoints]="historyPoints()">
-      </app-live-chart>
+      <app-live-chart [label]="metric.metricName" [value]="metric.value" [timestamp]="metric.timestamp" [maxPoints]="historyPoints()"></app-live-chart>
     }
-    @empty {
-      <p>No charts available.</p>
-    }
+    @empty { <p>No charts available.</p> }
   </div>
+</div>
+
+<div class="details-backdrop" *ngIf="selectedMetric() as metric" (click)="closeDetails()">
+  <section class="details-dialog" role="dialog" aria-modal="true" [attr.aria-label]="metric.metricName + ' details'" (click)="$event.stopPropagation()">
+    <button type="button" class="close-button" aria-label="Close details" (click)="closeDetails()">Close</button>
+    <p class="eyebrow">Metric details</p><h2>{{ metric.metricName }}</h2>
+    <p class="detail-value">{{ metric.value }} {{ metric.unit }}</p>
+    <app-live-chart [label]="metric.metricName" [value]="metric.value" [timestamp]="metric.timestamp" [maxPoints]="historyPoints()"></app-live-chart>
+    <div class="detail-statistics"><span>Minimum <strong>{{ getMinimum(metric.metricName) ?? '-' }}</strong></span><span>Average <strong>{{ getAverage(metric.metricName) ?? '-' | number:'1.0-2' }}</strong></span><span>Maximum <strong>{{ getMaximum(metric.metricName) ?? '-' }}</strong></span></div>
+  </section>
 </div>

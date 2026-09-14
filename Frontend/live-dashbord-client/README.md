@@ -1,59 +1,72 @@
-# LiveDashbordClient
+# Live Data Dashboard
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.12.
+An Angular 21 frontend for monitoring live metrics delivered by an ASP.NET Core API and SignalR hub.
 
-## Development server
+## Implemented features
 
-To start a local development server, run:
+- Live metric updates through SignalR with automatic reconnect status.
+- Initial metric snapshot loading with retry and error states.
+- Search and sort controls for metrics.
+- Configurable chart history windows.
+- Persistent metric history in browser storage.
+- Minimum, average, and maximum statistics.
+- Warning and critical threshold indicators.
+- Active alerts and recent alert history.
+- Optional browser notifications for critical alerts.
+- Clickable metric details dialog with chart and statistics.
+- Hide/show metric cards with a saved dashboard layout.
+- Dark/light theme preference saved in browser storage.
+- CSV export for the currently filtered metrics.
+- Responsive dashboard layout.
 
-```bash
-ng serve
+## Backend contract
+
+The frontend expects:
+
+- `GET {apiBaseUrl}/api/metrics/snapshot` returning `MetricData[]`.
+- SignalR hub at `{apiBaseUrl}/hubs/dashboard`.
+- A `ReceiveMetric` event containing metric data.
+
+Each metric can include optional display and alert metadata:
+
+```json
+{
+  "metricName": "CPU Usage",
+  "value": 42.5,
+  "timestamp": "2026-09-13T12:00:00Z",
+  "unit": "%",
+  "warningThreshold": 70,
+  "criticalThreshold": 90
+}
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Development
 
 ```bash
-ng generate component component-name
+npm install
+npm start
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Open `http://localhost:4200/`.
+
+## Build and tests
 
 ```bash
-ng generate --help
+npm run build
+npm test -- --watch=false
 ```
 
-## Building
+## Remaining roadmap
 
-To build the project run:
+- Backend-backed historical queries for custom date ranges.
+- Alert acknowledgement and server-side alert storage.
+- Authentication, user profiles, and role-based access.
+- Multiple named dashboards with server-side persistence.
+- End-to-end browser tests.
 
-```bash
-ng build
-```
+## Configuration
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Update the API URL in:
 
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- `src/environments/environment.ts`
+- `src/environments/environment.development.ts`
